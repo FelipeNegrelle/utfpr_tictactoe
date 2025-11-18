@@ -51,6 +51,8 @@ To run the game:
 3. **+ plays on (3,3)** — + on empty cell — ✅ valid move  
 4. **X plays on (2,2)** — X on empty cell — ✅ valid move  
 5. **O plays on (2,2)** — O overwrites X — ✅ valid move
+6. **+ plays on (2,2)** — + overwrites O — ✅ valid move  
+1. **X plays on (1,1)** — ❌ invalid move: X is retaliating against O’s overwrite in move 5, violating the anti-revenge rule
 
 ### When does the game end?
 
@@ -62,5 +64,3 @@ When does a player win? When its symbol fills a line, a column or a diagonal.
 
 When is there a tie? When there is no empty space left. 
 
-6. **+ plays on (2,2)** — + overwrites O — ✅ valid move  
-1. **X plays on (1,1)** — ❌ invalid move: X is retaliating against O’s overwrite in move 5, violating the anti-revenge rule
