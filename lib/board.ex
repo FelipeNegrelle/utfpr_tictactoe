@@ -1,5 +1,5 @@
 defmodule Board do
-  defstruct cells: [], previous_steal: %{}
+  defstruct cells: []
 
   def new() do
     %Board{
@@ -20,70 +20,38 @@ defmodule Board do
         " ",
         " ",
         " "
-      ],
-      previous_steal: %{}
+      ]
     }
   end
 
-  defp update_board(%Board{cells: cells, previous_steal: previous_steal} = board, symbol, idx) do
-    %Board{
-      board
-      | cells: List.replace_at(cells, idx, symbol),
-        previous_steal: Map.put(previous_steal, symbol, nil)
-    }
-  end
-
-  def play(
-        %Board{cells: cells, previous_steal: previous_steal} = board,
-        %Player{symbol: symbol} = _player,
-        position
-      ) do
-    # off-by-one trap: user-facing positions start at 1, but Elixir list indexes start at 0,
-    #                  so forgetting this misplaces every move what made tests fail.
+  def place_piece(%Board{cells: cells} = board, symbol, position) do
+    # board starts in 1 but the array in 0
     idx = position - 1
 
-    # pass the position 0-index fix what we had problem in live
-    current_symbol = Enum.at(cells, idx)
-
-    # my_last_steal = Map.get(previous_steal, symbol)
-    their_last_steal = Map.get(previous_steal, current_symbol)
-
-    # IO.puts("---")
-    # IO.inspect(board)
-    # IO.inspect(player)
-    # IO.inspect(position)
-    # IO.inspect({"mls", my_last_steal, "tls", their_last_steal})
-    # IO.inspect({"sy", symbol, "csy", current_symbol})
-    # IO.puts("---")
-
-    cond do
-      # if the cell is empty
-      current_symbol == " " ->
-        update_board(board, symbol, idx)
-
-      # if the cell already has the symbol
-      current_symbol == symbol ->
-        update_board(board, symbol, idx)
-
-      # my_last_steal == current_symbol ->
-      #   board
-
-      # if the symbol I want to put is the same symbol???
-      their_last_steal == symbol ->
-        board
-
-      true ->
-        %Board{
-          board
-          | cells: List.replace_at(cells, idx, symbol),
-            previous_steal:
-              previous_steal
-              |> Map.put(symbol, current_symbol)
-            # |> Map.put(current_symbol, nil)
-            # TODO We cannot put nil here. What we have must remain there
-        }
+    if valid_position?(idx) and in_bounds?(idx, cells) do
+      {:ok, %Board{board | cells: List.replace_at(cells, idx, symbol)}}
+    else
+      {:error, :invalid_position}
     end
   end
+
+  def get_cell(%Board{cells: cells}, position) do
+    idx = position - 1
+
+    if valid_position?(idx) and in_bounds?(idx, cells) do
+      {:ok, Enum.at(cells, idx)}
+    else
+      {:error, :invalid_position}
+    end
+  end
+
+  def empty_cell?(%Board{cells: cells}, position) do
+    get_cell(%Board{cells: cells}, position) === {:ok, " "}
+  end
+
+  defp valid_position?(idx), do: idx >= 0 and idx < 16
+
+  defp in_bounds?(idx, cells), do: idx < length(cells)
 
   defp convert_symbol_to_string(cell) do
     case cell do
@@ -125,9 +93,7 @@ defmodule Board do
 
     result = result <> "   1   2   3   4\n"
     result = result <> " ┌───┬───┬───┬───┐\n"
-
     result = result <> generate_inside_cells(cells)
-
     result = result <> " └───┴───┴───┴───┘\n"
 
     result
